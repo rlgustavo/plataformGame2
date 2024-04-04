@@ -7,32 +7,25 @@ public class PlayerController : MonoBehaviour
     private Animator anim;
     private Rigidbody2D rb;
 
-
-    //public int coins; // Numbers like 1 2 3 4 5 
-    //public float speed; // Numbers like 1.2f 13.2f .2f
-    //public string playerName; // "Gustavo" "Gelado" 
-    //public bool isDead; // true or false
-
     [Header("Move Info")]
-    //velocidade de Movimento
     public float moveSpeed;
-
-    public bool isMoving;
-    //Pegando os Inputs do Teclado
-    //Força do pulo
-    //pegando o meu proprio rigidBody
     public float jumpForce;
+    private bool isMoving;
     private float movingInput;
     private bool canDoubleJump = true;
 
     [Header("Collision Info")]
-    //Vendo a Layer Chão
     public LayerMask whatIsGround;
-    //Vendo a Distancia que está no chão
+    public LayerMask whatIsWall;
+    public float wallCheckDistance;
     public float groundCheckDistance;
-    //verificando ser está no chão ou não
     private bool isGrounded;
+    private bool isWallDetected;
+    private bool canWallSlide;
+    private bool isWallSliding;
 
+    private bool facingRight = true;
+    private int facingDirection = 1;
 
     // Start is called before the first frame update
     void Start()
@@ -44,26 +37,57 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        isMoving = rb.velocity.x != 0;
-        anim.SetBool("isMoving", isMoving);
-
+        AnimationsControllers();
+        FlipController();
         CollisionChecks();
         InputChecks();
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Flip();
+        }
 
         if(isGrounded)
         {
             canDoubleJump = true;
         }
+
+        if (canWallSlide)
+        {
+            isWallSliding = true;
+            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.1f);
+        }
+
+        if(!isWallDetected)
+        {
+            isWallSliding = false;
+        }
+
         Move();
 
     }
 
+
+    private void AnimationsControllers()
+    {
+        isMoving = rb.velocity.x != 0;
+        anim.SetBool("isMoving", isMoving);
+        anim.SetBool("isGrounded", isGrounded);
+        anim.SetBool("isWallSliding", isWallSliding);
+        anim.SetFloat("yVelocity", rb.velocity.y);
+    }
+
     private void InputChecks()
     {
-        //Debug.Log(Input.GetAxisRaw("Horizontal"));
-        //rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
-        //dando ao movingInput as Setas Horizontais do Teclado e A e D
+
+
         movingInput = Input.GetAxisRaw("Horizontal");
+
+        if (Input.GetAxis("Vertical") < 0)
+        {
+            canWallSlide = false;
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             JumpButton();
@@ -98,15 +122,46 @@ public class PlayerController : MonoBehaviour
         rb.velocity = new Vector2(rb.velocity.x, jumpForce);
     }
 
+    private void FlipController()
+    {
+        if(facingRight && movingInput < 0)
+        {
+            Flip();
+        }
+        else if(!facingRight && movingInput > 0)
+        {
+            Flip();
+        }
+    }
+
+    private void Flip()
+    {
+        facingDirection = facingDirection * -1;
+        facingRight = !facingRight;
+        transform.Rotate(0, 180, 0);
+    }
+
     private void CollisionChecks()
     {
         //pegando o RayCast que é vendo se ele esta decendo em relação ao chão
         isGrounded = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, whatIsGround);
+        isWallDetected = Physics2D.Raycast(transform.position, Vector2.right * facingDirection, wallCheckDistance, whatIsGround);
+   
+        if(isWallDetected && rb.velocity.y < 0)
+        {
+            canWallSlide = true;
+        }
+
+        if (!isWallDetected)
+        {
+            canWallSlide = false;
+        }
     }
 
     private void OnDrawGizmos()
     {
         //desenhando uma linha para baixo em relação ao tamanho do grounded check
         Gizmos.DrawLine(transform.position, new Vector3(transform.position.x, transform.position.y - groundCheckDistance));
+        Gizmos.DrawLine(transform.position, new Vector3(transform.position.x + wallCheckDistance * facingDirection, transform.position.y));
     }
 }

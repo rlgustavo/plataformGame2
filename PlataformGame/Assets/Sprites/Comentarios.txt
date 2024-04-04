@@ -1,0 +1,23 @@
+//public int coins; // Numbers like 1 2 3 4 5 
+//public float speed; // Numbers like 1.2f 13.2f .2f
+//public string playerName; // "Gustavo" "Gelado" 
+//public bool isDead; // true or false
+
+//velocidade de Movimento
+
+    //Pegando os Inputs do Teclado
+    //Força do pulo
+    //pegando o meu proprio rigidBody
+
+        //Vendo a Layer Chão
+
+    //Vendo a Distancia que está no chão
+    //verificando ser está no chão ou não
+
+04/04 fazendo atualizações no jogo e documentando tudo
+
+ //Debug.Log(Input.GetAxisRaw("Horizontal"));
+        //rb.velocity = new Vector2(moveSpeed, rb.velocity.y);
+        //dando ao movingInput as Setas Horizontais do Teclado e A e D
+
+
