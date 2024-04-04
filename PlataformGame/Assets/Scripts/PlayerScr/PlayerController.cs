@@ -10,8 +10,11 @@ public class PlayerController : MonoBehaviour
     [Header("Move Info")]
     public float moveSpeed;
     public float jumpForce;
-    private bool isMoving;
+    
     private float movingInput;
+
+    private bool canMove;
+    private bool isMoving;
     private bool canDoubleJump = true;
 
     [Header("Collision Info")]
@@ -42,14 +45,11 @@ public class PlayerController : MonoBehaviour
         CollisionChecks();
         InputChecks();
 
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            Flip();
-        }
 
         if(isGrounded)
         {
             canDoubleJump = true;
+            canMove = true;
         }
 
         if (canWallSlide)
@@ -58,23 +58,20 @@ public class PlayerController : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.1f);
         }
 
-        if(!isWallDetected)
-        {
-            isWallSliding = false;
-        }
-
         Move();
 
     }
 
 
     private void AnimationsControllers()
-    {
+    {   
         isMoving = rb.velocity.x != 0;
         anim.SetBool("isMoving", isMoving);
         anim.SetBool("isGrounded", isGrounded);
+        anim.SetBool("isWallDetected", isWallDetected);
         anim.SetBool("isWallSliding", isWallSliding);
         anim.SetFloat("yVelocity", rb.velocity.y);
+
     }
 
     private void InputChecks()
@@ -97,8 +94,12 @@ public class PlayerController : MonoBehaviour
 
     private void JumpButton()
     {
+        if (isWallSliding)
+        {
+            WallJump();
+        }
         //se você estiver no chão
-        if (isGrounded)
+        else if (isGrounded)
         {
             Jump();
         }
@@ -108,12 +109,23 @@ public class PlayerController : MonoBehaviour
             Jump();
         }
 
-    }
+        canWallSlide = false;
+
+    }   
 
     private void Move()
     {
-        //dando ao X uma velocidade e multiplicando pela seta 1 ou -1
-        rb.velocity = new Vector2(moveSpeed * movingInput, rb.velocity.y);
+        if (canMove)
+        {
+            //dando ao X uma velocidade e multiplicando pela seta 1 ou -1
+            rb.velocity = new Vector2(moveSpeed * movingInput, rb.velocity.y);
+        }
+    }
+
+    private void WallJump()
+    {
+        canMove = false;
+        rb.velocity = new Vector2(5 * -facingDirection, jumpForce);
     }
 
     private void Jump()
@@ -124,11 +136,11 @@ public class PlayerController : MonoBehaviour
 
     private void FlipController()
     {
-        if(facingRight && movingInput < 0)
+        if(facingRight && rb.velocity.x < 0)
         {
             Flip();
         }
-        else if(!facingRight && movingInput > 0)
+        else if(!facingRight && rb.velocity.x > 0)
         {
             Flip();
         }
@@ -154,6 +166,7 @@ public class PlayerController : MonoBehaviour
 
         if (!isWallDetected)
         {
+            isWallSliding = false;
             canWallSlide = false;
         }
     }
